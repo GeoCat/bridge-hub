@@ -5,10 +5,9 @@ site.addsitedir(os.path.abspath(os.path.dirname(__file__) + "/bridgestyle"))
 
 from .config import ApiConfig
 
-from bottle import request, Bottle, response, prepare_error_response
+from bottle import request, Bottle, response, HTTPResponse
 
 from bridgestyle import sld, mapboxgl, mapserver
-
 
 methods = {
             "to": {
@@ -31,19 +30,26 @@ def prepare_response(style, warnings):
                        'warnings': warnings})
 
 def prepare_error_response(status, msg):
-    response.headers['Content-Type'] = 'application/json'
-    response.status = status
-    return json.dumps({'message': msg})
-
+    headers = {'Content-type': 'application/json'}    
+    raise HTTPResponse(json.dumps({'message': msg}), status=status, headers=headers)
+    
 app = Bottle()
 
-#@app.post('/convert/<tofrom>/<format>')
+@app.get('/info')
+def info():
+    try:        
+        response.headers['Content-Type'] = 'application/json'
+        ret = {"formats": list(methods['to'].keys())}
+        response.status = 200
+        return json.dumps(ret)
+    except Exception as e:
+        prepare_error_response(500, str(e))
+
 @app.post('/convert/<tofrom>/<styleformat>')
 def convert(tofrom, styleformat):
     try:
         method = methods[tofrom][styleformat]
     except KeyError:
-        print(404)
         prepare_error_response(404, f"The specified conversion ({tofrom}/{styleformat}) is not available")
 
     geostyler = json.loads(request.forms.get('style'))
@@ -51,7 +57,6 @@ def convert(tofrom, styleformat):
         style, warnings = sld.fromgeostyler.convert(geostyler)
         return prepare_response(style, warnings)
     except Exception as e:
-        print(e)
         prepare_error_response(500, str(e))
 
 def main():
