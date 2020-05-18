@@ -1,6 +1,6 @@
 import os
 import context
-from bridgeserver import server
+import server
 import unittest
 
 from webtest import TestApp
@@ -12,7 +12,7 @@ def equalsOutputFile(res, filename):
     fileContent = res.json["style"][filename]
     with open(stylePath(filename),) as f:
         reference = f.read()        
-    return reference == fileContent    
+    return reference == fileContent
 
 class BridgeServerTest(unittest.TestCase):
 
@@ -42,13 +42,18 @@ class BridgeServerTest(unittest.TestCase):
         with open(stylePath("style.geostyler")) as f:
             geostyler = f.read()
         app = TestApp(server.app)
-        ret = app.post("/convert/to/mystyle", {"geostyler": geostyler}, expect_errors=True)
+        ret = app.post("/convert/to/mystyle", {"style": geostyler}, expect_errors=True)
         self.assertEqual(ret.status_code, 404)
+
+    def testWrongRequest(self):
+        app = TestApp(server.app)
+        ret = app.post("/convert/to/sld", {"wrong": "THIS IS WRONG"}, expect_errors=True)
+        self.assertEqual(ret.status_code, 400)
 
     def testWrongStyleContent(self):
         app = TestApp(server.app)
-        ret = app.post("/convert/to/sld", {"geostyler": "THIS IS WRONG"}, expect_errors=True)
-        self.assertEqual(ret.status_code, 500)
+        ret = app.post("/convert/to/sld", {"style": '{"wrong": "wrong"}'}, expect_errors=True)
+        self.assertEqual(ret.status_code, 500)        
 
     def testInfo(self):
         app = TestApp(server.app)

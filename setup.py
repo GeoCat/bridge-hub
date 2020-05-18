@@ -15,7 +15,8 @@ setup(
     include_package_data=True,
     install_requires=[
         "bottle",
-        "lxml"
+        "lxml",
+        "bottle-swagger-2"
     ],
     entry_points={
         "console_scripts": [

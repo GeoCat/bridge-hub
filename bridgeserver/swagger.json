@@ -37,10 +37,13 @@
               "$ref": "#/definitions/Info"
             }
           }
-        }
+        },
+        "produces": [
+          "application/json"
+        ]
       }
     },
-    "/convert/to/{format}": {
+    "/convert/{tofrom}/{styleformat}": {
       "post": {
         "tags": [
           "convert"
@@ -58,22 +61,31 @@
           {
             "in": "body",
             "name": "body",
-            "description": "The Geostyler style",
+            "description": "The style",
             "required": true,
             "schema": {
               "$ref": "#/definitions/Style"
             }
           },
           {
-            "name": "format",
+            "name": "styleformat",
             "in": "path",
-            "description": "The style to convert to",
             "required": true,
             "type": "string",
             "enum": [
               "mapbox",
               "sld",
               "mapserver"
+            ]
+          },          
+          {
+            "name": "tofrom",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "to",
+              "from"
             ]
           }
         ],
@@ -85,79 +97,26 @@
             }
           },
           "404": {
-            "description": "Unknown format",
+            "description": "Unknown format or operation requested",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "400": {
+            "description": "Invalid input",
             "schema": {
               "$ref": "#/definitions/Error"
             }
           },
           "500": {
-            "description": "Invalid input",
+            "description": "Problem during conversion",
             "schema": {
               "$ref": "#/definitions/Error"
             }
           }
         }
       }
-    },
-    "/convert/from/{format}": {
-      "post": {
-        "tags": [
-          "convert"
-        ],
-        "summary": "Converts a given style into Geostyler",
-        "description": "",
-        "operationId": "from",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "description": "The style to convert, in the format expressed in the 'format' parameter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Style"
-            }
-          },
-          {
-            "name": "format",
-            "in": "path",
-            "description": "The style to convert from",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "mapbox",
-              "sld",
-              "mapserver"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/ResponseStyle"
-            }
-          },
-          "404": {
-            "description": "Unknown format",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Invalid input",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    }
+    }   
   },
   "definitions": {
     "Info": {
@@ -183,8 +142,7 @@
       "type": "object",
       "properties": {
         "style": {
-          "type": "string",
-          "description": "The returned style in the requested format"
+          "type": "object"          
         },
         "warnings": {
           "type": "array",

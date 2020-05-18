@@ -2,13 +2,12 @@ import json
 import os
 import site
 import traceback
-site.addsitedir(os.path.abspath(os.path.dirname(__file__) + "/bridgestyle"))
+site.addsitedir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "bridgestyle"))
 
-from .config import ApiConfig
-
-from bottle import request, Bottle, response, HTTPResponse
-
+from config import ApiConfig
+from bottle import request, Bottle, HTTPResponse
 from bridgestyle import sld, mapboxgl, mapserver
+from bottle_swagger import SwaggerPlugin
 
 methods = {
             "to": {
@@ -24,6 +23,11 @@ methods = {
             }
           }
 
+def swagger_def():
+    with open(os.path.join(os.path.dirname(__file__), "swagger.json")) as f:
+        return json.load(f)
+
+
 def prepare_response(tofrom, format, res):
     headers = {'Content-type': 'application/json'}
     if tofrom == "to" and format == "mapserver":
@@ -31,40 +35,43 @@ def prepare_response(tofrom, format, res):
                  "symbols.mapserver": res[1]}
     else:
         style = {"style.%s" % format: res[0]}
-    return HTTPResponse(json.dumps({'style': style, 'warnings': res[-1]}), 
+    return HTTPResponse({'style': style, 'warnings': res[-1]}, 
                        status=200, headers=headers)    
 
 def prepare_error_response(status, msg):
     headers = {'Content-type': 'application/json'}    
-    raise HTTPResponse(json.dumps({'message': msg}), status=status, headers=headers)
+    return HTTPResponse({'message': msg}, status=status, headers=headers)
     
 app = Bottle()
+#app.install(SwaggerPlugin(swagger_def()))
 
 @app.get('/info')
 def info():
     try:        
-        response.headers['Content-Type'] = 'application/json'
-        ret = {"formats": list(methods['to'].keys())}
-        response.status = 200
-        return json.dumps(ret)
+        headers = {'Content-type': 'application/json'} 
+        return HTTPResponse({"formats": list(methods['to'].keys())}, 
+                            status=200, headers=headers) 
     except Exception as e:
-        prepare_error_response(500, str(e))
+        return prepare_error_response(500, traceback.format_exc())
 
 @app.post('/convert/<tofrom>/<styleformat>')
 def convert(tofrom, styleformat):
     try:
         method = methods[tofrom][styleformat]
     except KeyError:
-        prepare_error_response(404, f"The specified conversion ({tofrom}/{styleformat}) is not available")
+        return prepare_error_response(404, f"The specified conversion ({tofrom}/{styleformat}) is not available")
     
     try:
         original = request.forms.get('style')
         if tofrom == "to":
             original = json.loads(original)
+    except:
+        return prepare_error_response(400, traceback.format_exc())
+    try:
         res = method.convert(original)
         return prepare_response(tofrom, styleformat, res)
     except Exception as e:
-        prepare_error_response(500, traceback.format_exc())
+        return prepare_error_response(500, traceback.format_exc())
 
 def main():
     settings = ApiConfig()
