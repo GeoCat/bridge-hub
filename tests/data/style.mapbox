@@ -1,0 +1,20 @@
+{
+    "version": 8,
+    "name": "test",
+    "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    "sources": {
+        "test": "TODO:Configure this!!!"
+    },
+    "layers": [
+        {
+            "type": "fill",
+            "paint": {
+                "fill-opacity": 1.0,
+                "fill-color": "#e77148"
+            },
+            "source": "test",
+            "id": ":0"
+        }
+    ],
+    "sprite": "spriteSheet"
+}

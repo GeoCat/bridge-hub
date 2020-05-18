@@ -1,0 +1,14 @@
+LAYER
+  NAME "test"
+  STATUS ON
+  SIZEUNITS pixels
+  CLASS
+    NAME "default"
+    STYLE
+      OPACITY 100.0
+      COLOR "#e77148"
+      OUTLINECOLOR "#232323"
+      OUTLINEWIDTH 1.0
+    END
+  END
+END

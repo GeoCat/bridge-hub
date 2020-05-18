@@ -1,6 +1,7 @@
 import json
 import os
 import site
+import traceback
 site.addsitedir(os.path.abspath(os.path.dirname(__file__) + "/bridgestyle"))
 
 from .config import ApiConfig
@@ -23,11 +24,15 @@ methods = {
             }
           }
 
-def prepare_response(style, warnings):
-    response.headers['Content-Type'] = 'application/json'
-    response.status = 200
-    return json.dumps({'style': style,
-                       'warnings': warnings})
+def prepare_response(tofrom, format, res):
+    headers = {'Content-type': 'application/json'}
+    if tofrom == "to" and format == "mapserver":
+        style = {"style.mapserver": res[0],
+                 "symbols.mapserver": res[1]}
+    else:
+        style = {"style.%s" % format: res[0]}
+    return HTTPResponse(json.dumps({'style': style, 'warnings': res[-1]}), 
+                       status=200, headers=headers)    
 
 def prepare_error_response(status, msg):
     headers = {'Content-type': 'application/json'}    
@@ -51,13 +56,15 @@ def convert(tofrom, styleformat):
         method = methods[tofrom][styleformat]
     except KeyError:
         prepare_error_response(404, f"The specified conversion ({tofrom}/{styleformat}) is not available")
-
-    geostyler = json.loads(request.forms.get('style'))
+    
     try:
-        style, warnings = sld.fromgeostyler.convert(geostyler)
-        return prepare_response(style, warnings)
+        original = request.forms.get('style')
+        if tofrom == "to":
+            original = json.loads(original)
+        res = method.convert(original)
+        return prepare_response(tofrom, styleformat, res)
     except Exception as e:
-        prepare_error_response(500, str(e))
+        prepare_error_response(500, traceback.format_exc())
 
 def main():
     settings = ApiConfig()
