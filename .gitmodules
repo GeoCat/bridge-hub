@@ -1,1 +1,4 @@
 
+[submodule "bridgestyle"]
+	path = bridgestyle
+	url = https://github.com/GeoCat/bridge-style.git
