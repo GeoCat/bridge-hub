@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name="bridge-pyserver",
+    name="bridge-hub",
     version="0.1.0",
-    description="Bridge Server",
+    description="GeoCat Bridge Hub",
     author="GeoCat B.V.",
     license="MIT",
     classifiers=[
@@ -20,7 +20,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "bridge=bridgeserver.api:main"
+            "bridge=bridgehub.api:main"
         ]
     }
 )
