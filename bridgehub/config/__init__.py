@@ -11,6 +11,8 @@ class ApiConfig:
     def __init__(self, config_file=_CONFIG_XML):
         cfg_path = Path(config_file)
         if not cfg_path.is_absolute():
+            # Make sure that the XML in the config directory is loaded when bridgehub runs as a Python package
+            # or that the XML loads from the same directory as the executable when the application has been frozen
             cfg_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).parent
             cfg_path = cfg_dir / cfg_path
         uri = cfg_path.as_uri()
