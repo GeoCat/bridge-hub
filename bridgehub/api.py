@@ -1,15 +1,15 @@
 import json
-import os
 import site
 import traceback
+from pathlib import Path
 
 from bottle import request, Bottle, HTTPResponse
 from bottle_swagger import SwaggerPlugin
 
-site.addsitedir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "bridgestyle"))
+site.addsitedir(Path(__file__).resolve().parent / "bridgestyle")
 
-from bridgehub.config import ApiConfig
-from bridgehub.bridgestyle import sld, mapboxgl, mapserver
+from config import ApiConfig
+from bridgestyle import sld, mapboxgl, mapserver
 
 
 methods = {
@@ -28,7 +28,7 @@ methods = {
 
 
 def swagger_def():
-    with open(os.path.join(os.path.dirname(__file__), "swagger.json")) as f:
+    with open(Path(__file__).resolve().parent / "swagger.json") as f:
         return json.load(f)
 
 
