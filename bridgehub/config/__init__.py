@@ -4,7 +4,7 @@ from pathlib import Path
 from lxml import objectify
 
 # config file name
-_CONFIG_XML = "bridgeapi.xml"
+_CONFIG_XML = "bridgehub.xml"
 
 
 class ApiConfig:

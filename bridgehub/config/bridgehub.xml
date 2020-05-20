@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BridgeAPI>
+<BridgeHub>
 	<!-- TODO: store debug, log settings etc.? -->
 	<host>127.0.0.1</host>
 	<port>8080</port>
-</BridgeAPI>
+</BridgeHub>
