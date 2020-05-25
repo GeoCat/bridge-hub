@@ -17,7 +17,7 @@ class PostgisServer(ServerBase):
 
     def import_layer(self, name, source, fields):
         if fields:
-            #TODO
+            pass #TODO
         else:
             connection_str = "PG:dbname='%s' host='%s' port='%s' user='%s' password='%s'" % (self.database, self.host, self.port, self.username, self.password)
             ogr.RegisterAll()

@@ -109,7 +109,7 @@ class GeoserverServer(ServerBase):
                 self._publish_vector_layer_from_postgis(name, db)
             elif self.storage in [self.FILE_BASED]:
                 if source not in self._exported_layers:
-                    path = export_layer(source, fields)
+                    path = export_layer(source, sourcetype, fields)
                     self._exported_layers[source] = path
                 filename = self._exported_layers[source]
                 self._publish_vector_layer_from_file(name, filename)
@@ -124,7 +124,7 @@ class GeoserverServer(ServerBase):
                 self._publish_vector_layer_from_postgis(name, source, db)
         else:
             if source not in self._exported_layers:
-                path = export_layer(source, fields)
+                path = export_layer(source, sourcetype)
                 self._exported_layers[source] = path
             filename = self._exported_layers[source]
             self._publish_raster_layer(filename, name)

@@ -258,18 +258,21 @@ definitions:
   Layer:
     type: "object"
     properties:
-      layertype:
-        type: "string"
-        enum: 
-          - vectorfile
-          - rasterfile
-          - postgis
       name:
         type: "string"
       id:
         type: "string"        
       data:
-        type: "string"
+        type: "object"
+        properties:
+          sourcetype:
+            type: "string"
+            enum: 
+              - vectorfile
+              - rasterfile
+              - postgis
+          source:
+            type: "string"
       metadata:
         type: "string"        
       style:

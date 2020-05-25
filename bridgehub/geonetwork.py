@@ -4,12 +4,6 @@ import webbrowser
 import requests
 from requests.auth import HTTPBasicAuth
 
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.core import (
-    QgsMessageLog,
-    Qgis
-)
-
 from .metadata import saveMetadata
 from .serverbase import ServerBase
 
@@ -27,12 +21,6 @@ class TokenNetworkAccessManager:
         self.session.headers.update({"X-XSRF-TOKEN": self.token})
 
     def request(self, url, data=None, method="get", headers={}):
-        QgsMessageLog.logMessage(
-            QCoreApplication.translate("GeocatBridge", "Making '%s' request to '%s'")
-            % (method, url),
-            "GeoCat Bridge",
-            level=Qgis.Info,
-        )
         self.setTokenInHeader()
         method = getattr(self.session, method.lower())
         resp = method(url, headers=headers, data=data)
@@ -48,35 +36,23 @@ class TokenNetworkAccessManager:
 
 class GeonetworkServer(ServerBase):
 
-    PROFILE_DEFAULT = 0
-    PROFILE_INSPIRE = 1
-    PROFILE_DUTCH = 2
-
-    def __init__(self, name, url="", authid="", profile=0, node="srv"):
+    def __init__(self, name, url="", authid="", node="srv"):
         super().__init__()
         self.name = name
         self.url = url
-        self.authid = authid
-        self.profile = profile
-        self._isMetadataCatalog = True
-        self._isDataCatalog = False
         self.node = node
-        user, password = self.getCredentials()
-        self._nam = TokenNetworkAccessManager(self.url, user, password)
+        self._nam = TokenNetworkAccessManager(self.url, "", "")
+
+    def set_credentials(uself, username, password)
+        super().set_credentials(username, password)      
+        self._nam = TokenNetworkAccessManager(self.url, username, password)
 
     def request(self, url, data=None, method="get", headers={}):
         return self._nam.request(url, data, method, headers)
 
-    def publishLayerMetadata(self, layer, wms, wfs, layerName):
+    def publish_layer_letadata(self, layer, wms, wfs, layerName):
         mefFilename = saveMetadata(layer, None, self.apiUrl(), wms, wfs, layerName)
         self.publishMetadata(mefFilename)
-
-    def testConnection(self):
-        try:
-            self.me()
-            return True
-        except Exception as e:
-            return False
 
     def apiUrl(self):
         return self.url + "/%s/api" % self.node
