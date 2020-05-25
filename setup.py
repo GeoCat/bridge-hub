@@ -11,12 +11,11 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
     ],
-    packages=["pyserver"],
+    packages=["bridgehub"],
     include_package_data=True,
     install_requires=[
         "bottle",
         "lxml",
-        "bottle-swagger-2"
     ],
     entry_points={
         "console_scripts": [

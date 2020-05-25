@@ -1,0 +1,304 @@
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.0"
+  title: "Bridge server"
+  contact:
+    email: "info@geocat.net"
+  license:
+    name: "MIT License"
+    url: "https://opensource.org/licenses/MIT"
+host: "localhost:8080"
+basePath: "/"
+tags:
+- name: "publish"
+- name: "data"
+- name: "metadata"
+- name: "servers"
+schemes:
+- "http"
+- "https"
+
+paths:
+  /servers:
+    get:
+      tags:
+      - "servers"
+      summary: "return servers information"
+      description: ""      
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "" 
+          schema: 
+            type: "object"
+            properties:
+              servers:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Server"
+    post:
+      tags:
+      - "servers"
+      summary: "Adds a new server"
+      description: ""      
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "server"
+        in: "path"
+        description: "The server name"
+        required: true
+        type: "string"      
+      - name: "body"
+        in: "body"
+        description: "The server definition"
+        required: true
+        schema:
+            $ref: "#/definitions/Server"
+      responses:
+        "200":
+          description: ""               
+  /servers/{server}:
+    put:
+      tags:
+      - "servers"
+      summary: "Updates a server"
+      description: ""      
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "server"
+        in: "path"
+        description: "The server name"
+        required: true
+        type: "string"      
+      - name: "body"
+        in: "body"
+        description: "The server definition"
+        required: true
+        schema:
+            $ref: "#/definitions/Server"
+      responses:
+        "200" :
+          description: "" 
+  /publish:
+    post:
+      tags:
+      - "publish"
+      summary: "Publishes a project"
+      description: ""      
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "project"
+        in: "body"
+        required: true
+        schema:
+            $ref: "#/definitions/Project"
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: "#/definitions/Report"
+  /data/layers:
+    get:
+      tags:
+      - "data"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "workspace"
+        in: "query"
+        description: "The workspace name"
+        required: true
+        type: "string"
+      - name: "server"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "" 
+          type: "array"
+          items:
+            type: "string"   
+    delete:
+      tags:
+      - "data"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "project"
+        in: "query"
+        description: "The project name"
+        required: true
+        type: "string"
+      - name: "layers"
+        in: "query"
+        description: "The layer names"
+        required: true
+        type: "array"
+        items:
+          type: "string"
+      - name: "server"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: ""
+  /metadata/layers:
+    get:
+      tags:
+      - "metadata"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "workspace"
+        in: "query"
+        description: "The workspace name"
+        required: true
+        type: "string"
+      - name: "layers"
+        in: "query"
+        description: "The layer names"
+        required: true
+        type: "array"
+        items:
+          type: "string"
+      - name: "server"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: ""
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              data:
+                type: "boolean"
+              metadata:
+                type: "boolean"
+
+
+    delete:
+      tags:
+      - "metadata"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "project"
+        in: "query"
+        description: "The project name"
+        required: true
+        type: "string"
+      - name: "layers"
+        in: "query"
+        description: "The layer names"
+        required: true
+        type: "array"
+        items:
+          type: "string"
+      - name: "server"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: ""          
+        
+definitions:
+  Server:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      username:
+        type: "string"
+      password:
+        type: "string"        
+      config:        
+        type: "object"
+      servertye:
+        type: "string"
+  Project:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      servers:
+        type: "object"
+        properties:
+          data:
+            type: "string"
+          metadata:
+            type: "string"          
+      layers:
+        type: "array"
+        items:
+          $ref: "#/definitions/Layer"
+      groups:
+        type: "object"
+      onlysymbology:
+        type: "boolean"
+  Layer:
+    type: "object"
+    properties:
+      layertype:
+        type: "string"
+        enum: 
+          - vectorfile
+          - rasterfile
+          - postgis
+      name:
+        type: "string"
+      id:
+        type: "string"        
+      data:
+        type: "string"
+      metadata:
+        type: "string"        
+      style:
+        type: "object"
+        properties:
+          geostyler:
+            type: "string"
+          icons:
+            type: "array"
+            items:
+              type: "string"
+      fields:
+        type: "array"
+        items:
+          type: "string"
+  Report:
+    type: "object"
+    properties:
+      errors:
+        type: "array"
+        items:
+          type: "string"
+      warnings:
+        type: "array"
+        items:
+          type: "string"
+
+
+
+
+
+
