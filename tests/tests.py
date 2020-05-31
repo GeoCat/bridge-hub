@@ -22,7 +22,7 @@ class BridgehubTest(unittest.TestCase):
         self.add_geoserver(app)
         ret = app.get("/data/layers", {"project": "test", "server": "testgeoserver"})
 
-    def atest_publish_data(self):
+    def test_publish_data_from_geopackage(self):
         app = TestApp(api.app)
         server = {"name": "testgeoserver",
                   "servertype": "geoserver",
@@ -57,6 +57,42 @@ class BridgehubTest(unittest.TestCase):
                    }
         ret = app.post("/publish", json.dumps(project))
         print(ret)
+
+    def test_publish_data_from_shapefile(self):
+        app = TestApp(api.app)
+        server = {"name": "testgeoserver",
+                  "servertype": "geoserver",
+                  "username": "admin",
+                  "password": "geoserver",
+                  "options":{
+                    "url":"http://localhost:8080/geoserver"
+                  }}
+        shp = resource_path("worldcountries.shp")
+        geostyler_path = resource_path("worldcountries.geostyler")
+        with open(geostyler_path) as f:
+            geostyler = json.load(f)
+        project = {"name": "test",
+                   "groups":{},
+                   "onlysymbology": False,
+                   "servers":{                                
+                                "data": server,
+                                "metadata": None
+                            },
+                    "layers": [{
+                                "sourcetype": "vectorfile",
+                                "name": "test",
+                                "data": {"sourcetype": "vectorfile",
+                                         "source": shp},
+                                "metadata": None,
+                                "style": {
+                                    "geostyler": geostyler,
+                                    "icons": {}
+                                },
+                                "fields": {}
+                            }]
+                   }
+        ret = app.post("/publish", json.dumps(project))
+        print(ret)        
 
     def atest_publish_data_to_postgis(self):
         app = TestApp(api.app)
