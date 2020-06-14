@@ -8,12 +8,10 @@ import sqlite3
 from requests.exceptions import ConnectionError
 
 from bridgestyle.sld import fromgeostyler
-from .exporter import export_layer
 from .serverbase import ServerBase
-from .files import temp_filename_in_temp_folder
-from .utils import is_vector, is_empty, is_postgis, layer_crs, layer_extent
-from .apiconstants import VECTORFILE, RASTERFILE, POSTGIS
-
+from bridgehub.utils.files import temp_filename_in_temp_folder
+from bridgehub.utils.layers import is_vector, is_empty, is_postgis, layer_crs, layer_extent
+from bridgehub.apiconstants import VECTORFILE, RASTERFILE, POSTGIS
 
 class GeoserverServer(ServerBase):
 
@@ -26,7 +24,6 @@ class GeoserverServer(ServerBase):
 
     def __init__(
         self,
-        name,
         url="",
         authid="",
         storage=0,
@@ -34,7 +31,6 @@ class GeoserverServer(ServerBase):
         use_original_data_source=False,
     ):
         super().__init__()
-        self.name = name
 
         if url:
             if url.endswith("rest"):
@@ -58,7 +54,6 @@ class GeoserverServer(ServerBase):
             self.delete_workspace()
         self._ensure_workspace_exists()
         self._uploaded_datasets = {}
-        self._exported_layers = {}
         self._postgis_datastore_exists = False
         self._published_layers = set()
 
@@ -90,44 +85,35 @@ class GeoserverServer(ServerBase):
         self._publish_style(name, style_filename)
         return style_filename
 
-    def publish_layer(self, name, sourcetype, source, fields=None):
+    def publish_layer(self, name, sourcetype, source):
         if sourcetype in [VECTORFILE, POSTGIS]:
             if is_empty(source):
                 self.log_error("Layer contains zero features and cannot be published")
                 return
 
             if sourcetype == POSTGIS and self.use_original_data_source:
-                from .postgis import PostgisServer
-                db = PostgisServer(
-                    "temp",                    
-                    source["host"],
-                    source["port"],
-                    source["schema"],
-                    source["database"],
+                from bridgehub.publish.postgis import PostgisServer
+                db = PostgisServer(                    
+                    source.get("host"),
+                    source.get("port"),
+                    source.get("schema"),
+                    source.get("database"),
                 )
                 db.set_credentials(source["username"], source["password"])
-                self._publish_vector_layer_from_postgis(name, db)
+                self._publish_vector_layer_from_postgis(name, db.gdal_connection_string(), db)
             elif self.storage in [self.FILE_BASED]:
-                if source not in self._exported_layers:
-                    path = export_layer(source, sourcetype, fields)
-                    self._exported_layers[source] = path
-                filename = self._exported_layers[source]
-                self._publish_vector_layer_from_file(name, filename)
+                self._publish_vector_layer_from_file(name, source)
             elif self.storage == self.POSTGIS_MANAGED_BY_BRIDGE:
-                from .servers import server_from_name
-                db = server_from_name(self.db)
+                from bridgehub.publish.servers import server_from_definition
+                db = server_from_definition(self.db)
                 if db is None:
                     raise Exception(
                         "GeocatBridge", "Cannot find the selected PostGIS database"                        
                     )
-                db.import_layer(name, source, fields)
+                db.import_layer(name, source)
                 self._publish_vector_layer_from_postgis(name, source, db)
         else:
-            if source not in self._exported_layers:
-                path = export_layer(source, sourcetype)
-                self._exported_layers[source] = path
-            filename = self._exported_layers[source]
-            self._publish_raster_layer(filename, name)
+            self._publish_raster_layer(source, name)
 
     def unpublish_data(self, name):
         self.delete_layer(name)
@@ -136,8 +122,9 @@ class GeoserverServer(ServerBase):
     def base_url(self):
         return "/".join(self.url.split("/")[:-1])
 
-    def _publish_vector_layer_from_file(self, name, filename):
-        self.log_info("Publishing layer from file: %s" % filename)
+    def _publish_vector_layer_from_file(self, name, filename):        
+        if not filename.lower().endswith(".gpkg"):
+            raise Exception("Files to publish must be in GPKG format")
         is_data_uploaded = filename in self._uploaded_datasets
         if not is_data_uploaded:
             with open(filename, "rb") as f:
@@ -181,7 +168,6 @@ class GeoserverServer(ServerBase):
             r = self.request(url, ft, "post")
         else:
             r = self.request(url, ft, "put")
-        self.log_info("Feature type correctly created from GPKG file '%s'" % filename)
         self._set_layer_style(name, name)
 
     def _publish_vector_layer_from_postgis(self, name, source, db):
@@ -216,6 +202,8 @@ class GeoserverServer(ServerBase):
             self._workspace,
             name,
         )
+        print (ftUrl)
+        print(ft)
         self.request(ftUrl, data=ft, method="post")
         self._set_layer_style(name, name)
 
@@ -229,7 +217,6 @@ class GeoserverServer(ServerBase):
                 layername,
             )
             self.request(url, f.read(), "put")
-        self.log_info("Feature type correctly created from Tiff file '%s'" % filename)
         self._set_layer_style(layername, layername)
 
     def create_groups(self, groups):
@@ -267,8 +254,6 @@ class GeoserverServer(ServerBase):
             self.request(url, groupdef, "post")
         except:
             self.request(url, groupdef, "put")
-
-        self.log_info("Group %s correctly created" % group["name"])
 
     def delete_style(self, name):
         if self.style_exists(name):

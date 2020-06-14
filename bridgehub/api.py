@@ -1,13 +1,8 @@
 import json
-import site
 import traceback
-from pathlib import Path
-site.addsitedir(Path(__file__).resolve().parent / "bridgestyle")
 
-from bridgehub.publish import publish_project
+from bridgehub.publish.publish import publish_project
 from bridgehub.config import ApiConfig
-from bridgehub.servers import servers, add_server, delete_server, server_from_name
-from bridgehub import data
 from bottle import request, Bottle, HTTPResponse, response
 
 app = Bottle()
@@ -25,44 +20,12 @@ def custom500(error):
     response.content_type = 'application/json'
     return json.dumps({'msg': str(error)})
 
-@app.get('/servers')
-def getservers():
-    headers = {'Content-type': 'application/json'} 
-    return prepare_response({'servers': servers()})
-
-@app.post('/servers')
-def new_server():    
-    body = request.body.read()
-    serverdef = json.loads(body)
-    name = serverdef["name"]
-    server = server_from_name(name)
-    if server is not None:
-        return prepare_error_response(400, "A server with that name already exists")
-    add_server(serverdef)
-
-@app.put('/servers/{name}')
-def update_server(name):
-    body = request.body.read()
-    serverdef = json.loads(body)
-    serverdef["name"] = name
-    add_server(serverdef)
 
 @app.post('/publish')
 def publish():
     project = request.body.read()
     res = publish_project(json.loads(project))
     return prepare_response(res)
-
-@app.get('/data/layers')
-def datalayers():    
-    project = request.query.project
-    server = request.query.server
-    layers = data.layers(project, server)
-    return prepare_response({"layers": layers})
-
-@app.delete('/data/layers/{layer}')
-def delete_layer(layer):    
-    return prepare_response({})
 
 ############## Style conversion endpoints ###############
 
@@ -110,8 +73,6 @@ def convert(tofrom, styleformat):
         return prepare_conversion_response(tofrom, styleformat, res)
     except Exception as e:
         return prepare_error_response(500, traceback.format_exc())
-
-
 
 
 

@@ -4,7 +4,6 @@ import webbrowser
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .metadata import saveMetadata
 from .serverbase import ServerBase
 
 
@@ -15,19 +14,19 @@ class TokenNetworkAccessManager:
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(username, password)
 
-    def setTokenInHeader(self):
+    def set_token_in_header(self):
         if self.token is None:
-            self.getToken()
+            self.get_token()
         self.session.headers.update({"X-XSRF-TOKEN": self.token})
 
     def request(self, url, data=None, method="get", headers={}):
-        self.setTokenInHeader()
+        self.set_token_in_header()
         method = getattr(self.session, method.lower())
         resp = method(url, headers=headers, data=data)
         resp.raise_for_status()
         return resp
 
-    def getToken(self):
+    def get_token(self):
         signinUrl = self.url + "/eng/catalog.signin"
         self.session.post(signinUrl)
         self.token = self.session.cookies.get("XSRF-TOKEN")
@@ -36,63 +35,40 @@ class TokenNetworkAccessManager:
 
 class GeonetworkServer(ServerBase):
 
-    def __init__(self, name, url="", authid="", node="srv"):
+    def __init__(self, url="", node="srv"):
         super().__init__()
-        self.name = name
         self.url = url
         self.node = node
         self._nam = TokenNetworkAccessManager(self.url, "", "")
 
-    def set_credentials(uself, username, password)
+    @staticmethod
+    def servertype():
+        return "geonetwork"
+
+    def set_credentials(self, username, password):
         super().set_credentials(username, password)      
         self._nam = TokenNetworkAccessManager(self.url, username, password)
 
     def request(self, url, data=None, method="get", headers={}):
         return self._nam.request(url, data, method, headers)
 
-    def publish_layer_letadata(self, layer, wms, wfs, layerName):
-        mefFilename = saveMetadata(layer, None, self.apiUrl(), wms, wfs, layerName)
-        self.publishMetadata(mefFilename)
-
-    def apiUrl(self):
-        return self.url + "/%s/api" % self.node
-
-    def xmlServicesUrl(self):
-        return self.url + "/%s/eng" % self.node
-
-    def metadataExists(self, uuid):
-        try:
-            self.getMetadata(uuid)
-            return True
-        except:
-            return False
-
-    def getMetadata(self, uuid):
-        url = self.apiUrl() + "/records/" + uuid
-        return self.request(url)
-
-    def publishMetadata(self, metadata):
-        self._nam.setTokenInHeader()
-        url = self.apiUrl() + "/records"
+    def publish_layer_metadata(self, meffile):
+        self._nam.set_token_in_header()
+        url = self.api_url() + "/records"
         headers = {"Accept": "application/json"}
         params = {"uuidProcessing", "OVERWRITE"}
 
-        with open(metadata, "rb") as f:
+        print(meffile, url)
+        with open(meffile, "rb") as f:
             files = {"file": f}
             r = self._nam.session.post(url, files=files, headers=headers)
             r.raise_for_status()
 
-    def deleteMetadata(self, uuid):
-        url = self.apiUrl() + "/records/" + uuid
+    def api_url(self):
+        return self.url + "/%s/api" % self.node
+
+    def delete_metadata(self, uuid):
+        url = self.api_url() + "/records/" + uuid
         self.request(url, method="delete")
 
-    def me(self):
-        url = self.apiUrl() + "/info?type=me"
-        ret = self.request(url)
-        return ret
 
-    def metadataUrl(self, uuid):
-        return self.url + "/%s/api/records/%s" % (self.node, uuid)
-
-    def openMetadata(self, uuid):
-        webbrowser.open_new_tab(self.metadataUrl(uuid))

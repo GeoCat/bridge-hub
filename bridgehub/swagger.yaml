@@ -20,73 +20,6 @@ schemes:
 - "https"
 
 paths:
-  /servers:
-    get:
-      tags:
-      - "servers"
-      summary: "return servers information"
-      description: ""      
-      produces:
-      - "application/json"
-      responses:
-        "200":
-          description: "" 
-          schema: 
-            type: "object"
-            properties:
-              servers:
-                type: "array"
-                items:
-                  $ref: "#/definitions/Server"
-    post:
-      tags:
-      - "servers"
-      summary: "Adds a new server"
-      description: ""      
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "server"
-        in: "path"
-        description: "The server name"
-        required: true
-        type: "string"      
-      - name: "body"
-        in: "body"
-        description: "The server definition"
-        required: true
-        schema:
-            $ref: "#/definitions/Server"
-      responses:
-        "200":
-          description: ""               
-  /servers/{server}:
-    put:
-      tags:
-      - "servers"
-      summary: "Updates a server"
-      description: ""      
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "server"
-        in: "path"
-        description: "The server name"
-        required: true
-        type: "string"      
-      - name: "body"
-        in: "body"
-        description: "The server definition"
-        required: true
-        schema:
-            $ref: "#/definitions/Server"
-      responses:
-        "200" :
-          description: "" 
   /publish:
     post:
       tags:
@@ -107,119 +40,7 @@ paths:
         "200":
           description: ""
           schema:
-            $ref: "#/definitions/Report"
-  /data/layers:
-    get:
-      tags:
-      - "data"
-      description: ""
-      produces:
-      - "application/json"
-      parameters:
-      - name: "workspace"
-        in: "query"
-        description: "The workspace name"
-        required: true
-        type: "string"
-      - name: "server"
-        in: "query"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "" 
-          type: "array"
-          items:
-            type: "string"   
-    delete:
-      tags:
-      - "data"
-      description: ""
-      produces:
-      - "application/json"
-      parameters:
-      - name: "project"
-        in: "query"
-        description: "The project name"
-        required: true
-        type: "string"
-      - name: "layers"
-        in: "query"
-        description: "The layer names"
-        required: true
-        type: "array"
-        items:
-          type: "string"
-      - name: "server"
-        in: "query"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: ""
-  /metadata/layers:
-    get:
-      tags:
-      - "metadata"
-      description: ""
-      produces:
-      - "application/json"
-      parameters:
-      - name: "workspace"
-        in: "query"
-        description: "The workspace name"
-        required: true
-        type: "string"
-      - name: "layers"
-        in: "query"
-        description: "The layer names"
-        required: true
-        type: "array"
-        items:
-          type: "string"
-      - name: "server"
-        in: "query"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: ""
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              data:
-                type: "boolean"
-              metadata:
-                type: "boolean"
-
-
-    delete:
-      tags:
-      - "metadata"
-      description: ""
-      produces:
-      - "application/json"
-      parameters:
-      - name: "project"
-        in: "query"
-        description: "The project name"
-        required: true
-        type: "string"
-      - name: "layers"
-        in: "query"
-        description: "The layer names"
-        required: true
-        type: "array"
-        items:
-          type: "string"
-      - name: "server"
-        in: "query"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: ""          
+            $ref: "#/definitions/Report"       
         
 definitions:
   Server:
@@ -244,9 +65,9 @@ definitions:
         type: "object"
         properties:
           data:
-            type: "string"
+            type: "#/definitions/Layer"
           metadata:
-            type: "string"          
+            type: "#/definitions/Layer"         
       layers:
         type: "array"
         items:
@@ -284,10 +105,6 @@ definitions:
             type: "array"
             items:
               type: "string"
-      fields:
-        type: "array"
-        items:
-          type: "string"
   Report:
     type: "object"
     properties:

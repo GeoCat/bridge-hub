@@ -1,7 +1,11 @@
+import site
+from pathlib import Path
+site.addsitedir(Path(__file__).resolve().parent.parent / "bridgestyle")
+
 import traceback
 
 from bridgehub.apiconstants import VECTORFILE, POSTGIS
-from bridgehub.servers import server_from_definition
+from bridgehub.publish.servers import server_from_definition
 
 def publish_project(project):
     results = {}
@@ -18,7 +22,7 @@ def publish_project(project):
     layers = project["layers"]
 
     for layer in layers:
-        warnings, errors = [], []        
+        warnings, errors = [], []
         #warnings.extend(validateLayer(layer))        
         if geodata_server is not None:
             try:
@@ -28,7 +32,7 @@ def publish_project(project):
                 errors.append(traceback.format_exc())
             try:
                 if not onlysymbology:     
-                    geodata_server.publish_layer(layer["name"], layer["data"]["sourcetype"], layer["data"]["source"], layer["fields"])
+                    geodata_server.publish_layer(layer["name"], layer["data"]["sourcetype"], layer["data"]["source"])
                     if metadata_server is not None:
                         url = metadata_server.metadata_url(layer["id"])
                         geodata_server.set_layer_metadata_link(layer["name"], url)            
@@ -50,10 +54,7 @@ def publish_project(project):
                     wms = None
                     wfs = None
                     fullName = None
-                metadata_server.publish_layer_metadata(
-                    layer["metadata"], wms, wfs, fullName
-                )
-
+                metadata_server.publish_layer_metadata(layer["metadata"])
             except:
                 errors.append(traceback.format_exc())
 

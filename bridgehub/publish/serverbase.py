@@ -8,9 +8,6 @@ class ServerBase:
         self.username = None
         self.password = None
 
-    def log_info(self, text):
-        pass
-
     def log_warning(self, text):
         self._warnings.append(text)
 
@@ -39,7 +36,6 @@ class ServerBase:
         if isinstance(data, dict):
             data = json.dumps(data)
             headers["content-type"] = "application/json"
-        self.log_info("Making %s request to '%s'" % (method, url))
         r = req_method(
             url, headers=headers, files=files, data=data, auth=(username, password)
         )
